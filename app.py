@@ -10,7 +10,11 @@ llm = ChatGroq(model="llama-3.3-70b-versatile")
 
 # Prompts
 pro_prompt = ChatPromptTemplate.from_template(
-    "You are the Pro-Agent. Provide a strong argument for: {question}"
+    "You are the Pro-Agent. " \
+    "" \
+    "Provide a strong argument for: {question}" \
+    "Opponet's last challenge : {last_con}" \
+    "Strengthen your argument and defend your position"
 )
 
 con_prompt = ChatPromptTemplate.from_template(
@@ -38,7 +42,7 @@ class GraphState(TypedDict):
 
 
 def proNode(state: GraphState):
-    messages = pro_prompt.format_messages(question=state["question"])
+    messages = pro_prompt.format_messages(question=state["question"], last_con = state["con_challenge"])
     response = llm.invoke(messages)
     return {"pro_answer": response.content}
 
@@ -60,7 +64,7 @@ def moderatorNode(state: GraphState):
 
 
 def condition(state: GraphState):
-    if state["numberOfRounds"] == 10:
+    if state["numberOfRounds"] == 1:
         return "moderatorNode"
     return "proNode"
 
@@ -78,7 +82,7 @@ builder.add_edge("moderatorNode", END)
 
 graph = builder.compile()
 
-inputs = {"question": "Is AI safe for humanity?", "numberOfRounds" : 0}
+inputs = {"question": "Is AI safe for humanity?", "numberOfRounds" : 0, "con_challenge" : ""}
 result = graph.invoke(inputs)
 
 print("Final Answer: ", result["final_answer"])
