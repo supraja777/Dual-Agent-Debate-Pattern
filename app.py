@@ -34,6 +34,7 @@ class GraphState(TypedDict):
     pro_answer: str
     con_challenge: str
     final_answer: str
+    numberOfRounds: int
 
 
 def proNode(state: GraphState):
@@ -45,7 +46,7 @@ def proNode(state: GraphState):
 def conNode(state: GraphState):
     messages = con_prompt.format_messages(pro_answer=state["pro_answer"])
     response = llm.invoke(messages)
-    return {"con_challenge": response.content}
+    return {"con_challenge": response.content, "numberOfRounds" : state["numberOfRounds"] + 1}
 
 
 def moderatorNode(state: GraphState):
@@ -58,6 +59,12 @@ def moderatorNode(state: GraphState):
     return {"final_answer": response.content}
 
 
+def condition(state: GraphState):
+    if state["numberOfRounds"] == 10:
+        return "moderatorNode"
+    return "proNode"
+
+
 builder = StateGraph(GraphState)
 
 builder.add_node("proNode", proNode)
@@ -66,12 +73,13 @@ builder.add_node("moderatorNode", moderatorNode)
 
 builder.add_edge(START, "proNode")
 builder.add_edge("proNode", "conNode")
-builder.add_edge("conNode", "moderatorNode")
+builder.add_conditional_edges("conNode", condition)
 builder.add_edge("moderatorNode", END)
 
 graph = builder.compile()
 
-inputs = {"question": "Is AI safe for humanity?"}
+inputs = {"question": "Is AI safe for humanity?", "numberOfRounds" : 0}
 result = graph.invoke(inputs)
 
-print("Final Answer:\n", result["final_answer"])
+print("Final Answer: ", result["final_answer"])
+print("Number of rounds: ", result["numberOfRounds"])
