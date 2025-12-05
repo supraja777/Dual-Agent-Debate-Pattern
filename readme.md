@@ -1,94 +1,69 @@
-# 🧠 Multi-Round AI Debate with Confidence Scoring
+## 🧠 Agent Personas
 
-This project implements an **iterative, multi-round AI debate system** where two intelligent agents — **Pro** and **Con** — argue opposing sides of a question, and a **Moderator** agent produces a final, balanced answer along with a **confidence score**.
+To simulate a realistic and meaningful debate, each agent is initialized with a **distinct persona** and objective:
 
-The system is built on a **state-driven graph architecture**, enabling dynamic loops and conditional flow control across multiple rounds of reasoning.
+| Agent         | Persona                 | Objective                                                        |
+| ------------- | ----------------------- | ---------------------------------------------------------------- |
+| **Pro Agent** | Optimistic Technologist | Emphasizes innovation, progress, and positive societal outcomes  |
+| **Con Agent** | Skeptical Ethicist      | Highlights risks, misuse, bias, and long-term consequences       |
+| **Moderator** | Neutral Synthesizer     | Evaluates both perspectives, weighs confidence, produces balance |
 
----
-
-## 🎯 Purpose
-
-Modern LLMs often produce answers without opposition or scrutiny. This project introduces **structured argumentation**, allowing responses to be:
-
-* Challenged
-* Strengthened
-* Refined
-* Quantified via confidence
-
-This results in **more thoughtful, explainable, and reliable outcomes**.
+These personas shape the **tone, reasoning, and style** of each agent’s responses across rounds.
 
 ---
 
-## 🔄 How It Works
+## 🗂️ Memory & Context Handling
 
-1. A **user question** is passed into the system.
-2. The **Pro Agent** builds an argument supporting the question’s premise.
-3. The **Con Agent** critiques and challenges the Pro Agent’s position.
-4. The system **loops** through these agents for multiple rounds.
-5. After reaching a defined limit, the **Moderator Agent**:
+Each agent maintains a **short-term memory buffer** containing its most recent points.
 
-   * Synthesizes both perspectives
-   * Produces a final balanced response
-   * Assigns a final confidence score
+* Only the **last N arguments** are retained (to prevent prompt overload)
+* Past arguments are **summarized and fed back** into subsequent rounds
+* This allows the debate to **evolve rather than repeat**
 
-The number of rounds is controlled by the internal graph state (`numberOfRounds`).
+This results in:
 
----
-
-## 📊 Confidence Scoring
-
-Each agent provides a **self-assessed confidence score**:
-
-| Agent     | Role                                   |
-| --------- | -------------------------------------- |
-| Pro Agent | Supports the argument + confidence     |
-| Con Agent | Challenges the argument + confidence   |
-| Moderator | Produces the final answer + confidence |
-
+* Increasingly refined arguments
+* Reduced redundancy
+* Stronger logical progression
+* More informed final synthesis
 
 ---
 
-## 🏗️ Architecture Overview
+## ⚙️ State Management (GraphLogic)
+
+The debate is controlled by a **shared graph state object** that tracks:
+
+* `numberOfRounds`
+* `proMemory`
+* `conMemory`
+* `lastProResponse`
+* `lastConResponse`
+* `question`
+
+A conditional function determines the flow:
 
 ```
-Question
-   ↓
-Pro Agent → Con Agent → (Repeated N times)
-                          ↓
-                   Moderator Agent
-                          ↓
-                 Final Answer + Confidence
+if numberOfRounds >= MAX_ROUNDS:
+    → moderator
+else:
+    → pro
 ```
 
-The loop continues until the maximum number of rounds is reached (e.g., 8 or 10), after which the Moderator is invoked.
+This ensures **automatic looping** and **clean termination** of the debate.
 
 ---
 
-## ✅ Example Outputs
+## 🧪 Configuration
 
-### Output after 2 rounds
+You can easily tune the system using the following parameters:
 
-* **Final Answer:**
+| Variable       | Purpose                 | Recommended    |
+| -------------- | ----------------------- | -------------- |
+| `MAX_ROUNDS`   | Total debate rounds     | 8–10           |
+| `MEMORY_LIMIT` | Past arguments stored   | 6–10           |
+| `MODEL_NAME`   | LLM used                | `llama3.3-70b` |
+| `TEMPERATURE`  | Creativity vs stability | 0.3–0.6        |
 
-  > AI can be safe for humanity when designed with robust safety protocols, transparency, and human oversight… A nuanced approach is necessary to ensure it benefits society as a whole.
-
-* **Final Confidence:** 0.85
-
-* **Number of Rounds:** 2
-
----
-
-### Output after 8 rounds
-
-* **Final Answer:**
-
-  > AI can be safe for humanity if developed responsibly, with human-centered design, transparency, explainability, independent auditing bodies, AI literacy programs, and bias mitigation systems.
-
-* **Final Confidence:** 0.935
-
-* **Number of Rounds:** 8
+This allows quick adjustments based on **use-case and compute constraints**.
 
 ---
-
-
-
